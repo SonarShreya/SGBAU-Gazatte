@@ -61,47 +61,42 @@ const router = express.Router();
 const Login = require("./Login"); // Assuming Login is a User model
 
 
+
+
+
 router.post("/api/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
-    // Check if email and password are provided
-    if (!email || !password) {
-      return res.status(400).json({ message: "Please provide both email and password" });
-    }
+    console.log("Received login request for email:", email);
 
-    // Check if user exists
+    // Convert email to lowercase and trim any spaces
+    email = email.toLowerCase().trim();
+
     const user = await Login.findOne({ email });
+
+    console.log("User found in DB:", user);
+
     if (!user) {
       return res.status(400).json({ message: "User does not exist" });
     }
 
-    // Check if the password matches
     const isMatch = await bcrypt.compare(password, user.password);
+
+    console.log("Password match:", isMatch);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // If everything is fine, return success and send user details including the password entered by the user
-    const userObj = user.toObject(); // Convert mongoose object to plain object
-    delete userObj.password; // Remove the password field (hashed) before returning to client
+    res.status(200).json({ message: "Login successful" });
 
-    res.status(200).json({
-      message: "Login successful",
-      user: {
-        id: userObj._id,         // Include _id field as id
-        email: userObj.email,     // Include email field
-        Password: password // Return the password entered by the user
-      }
-    });
   } catch (error) {
-    console.error("Error logging in:", error);
-    res.status(500).json({
-      error: "Error logging in",
-      details: error.message
-    });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
+
 
 router.get("/api/users", async (req, res) => {
   try {
