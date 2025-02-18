@@ -15,7 +15,7 @@ const Login = () => {
 
   const handleLogin = async () => {
   try {
-    let result = await fetch("http://localhost:5001/api/api/login", { // Ensure the URL is correct
+    let result = await fetch("http://localhost:5001/api/login", { // Ensure the URL is correct
       method: "POST",
       body: JSON.stringify({ email, password }),
       headers: {
@@ -41,6 +41,33 @@ const Login = () => {
     alert("An error occurred during login. Please try again.");
   }
 };
+
+
+// const handleLogin = async () => {
+//   try {
+//     const response = await fetch("http://localhost:5001/api/login", {
+//       method: "POST",
+//       body: JSON.stringify({ email, password }),
+//       headers: { "Content-Type": "application/json" },
+//     });
+
+//     console.log("Response status:", response.status);
+//     console.log("Response headers:", response.headers);
+
+//     const result = await response.json();
+//     console.log("Login result:", result);
+
+//     if (result.message === "Login successful") {
+//       localStorage.setItem("user", JSON.stringify(result.user));
+//       navigate("/DisplayData");
+//     } else {
+//       alert(result.message || "Login failed");
+//     }
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     alert("An error occurred during login. Please try again.");
+//   }
+// };
 
 
   return (
