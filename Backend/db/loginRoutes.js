@@ -1,101 +1,39 @@
-// const express = require("express");
-// const router = express.Router();
-// const bcrypt = require("bcryptjs");
-// const Login = require("./Login"); // ✅ Corrected Import
-
-// // ✅ POST API: Register/Login User
-// router.post("/api/logins", async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     // Check if user already exists
-//     let user = await Login.findOne({ email });
-//     if (user) {
-//       return res.status(400).json({ error: "User already exists" });
-//     }
-
-//     // Hash the password before saving
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     user = new Login({ email, password: hashedPassword });
-
-//     await user.save();
-//     res.status(201).json({ message: "User registered successfully" });
-
-//   } catch (error) {
-//     res.status(500).json({ error: "Error in registering user" });
-//   }
-// });
-
-// // ✅ GET API: Fetch All Login Users
-// router.get("/api/logins", async (req, res) => {
-//   try {
-//     const users = await Login.find(); // Fetch all users
-//     res.json(users);
-//   } catch (error) {
-//     console.error("Error fetching users:", error);
-//     res.status(500).json({ error: "Error fetching users" });
-//   }
-// });
-
-// module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const Login = require("./Login"); // Import the Login model
 const router = express.Router();
-const Login = require("./Login"); // Assuming Login is a User model
 
 
 
 router.post("/api/login", async (req, res) => {
   try {
-    let { email, password } = req.body;
+    const { email, password } = req.body;
 
-    console.log("Received login request for email:", email);
-
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
-
-    // Convert email to lowercase and trim spaces
-    email = email.toLowerCase().trim();
-
-    // Find user in database
-    const user = await Login.findOne({ email });
-
+console.log({email})
+    // Normalize email
+    const user = await Login.findOne({ email: email.toLowerCase().trim() });
+    console.log(user,"-----------------user-----------")
     if (!user) {
-      return res.status(400).json({ message: "User does not exist" });
+      return res.status(404).json({ message: "User not found" });
+
+
+      
     }
 
-    console.log("User found in DB:", user.email);
-
-    // Compare provided password with stored hashed password
+    // Check if password matches (hashed in DB)
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // Send only the original email and password back (not the hashed password)
     res.status(200).json({ 
-      message: "Login successful",
-      email: user.email,
-      password: password // ⚠️ Only for debugging, REMOVE in production
+      message: "Login successful", 
+      email: user.email, 
+      password: password  // Sending back original entered password (not hashed one)
     });
 
   } catch (error) {
@@ -106,45 +44,21 @@ router.post("/api/login", async (req, res) => {
 
 
 
-router.get("/api/users", async (req, res) => {
+//🔹 GET: Fetch all users (excluding passwords)
+router.get("/api/getlogin", async (req, res) => {
   try {
-    const users = await Login.find();  // Fetch all users
+    const users = await Login.find().select("-password"); // Exclude password field
 
-    // Remove password from each user object and send the password as well
-    const usersWithPassword = users.map(user => {
-      const userObj = user.toObject();
-      return {
-        id: userObj._id,
-        email: userObj.email,
-        Password: userObj.password  // Include the hashed password in the response (for testing purposes)
-      };
-    });
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
 
-    res.status(200).json(usersWithPassword);
+    res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
-    res.status(500).json({
-      error: "Error fetching users",
-      details: error.message
-    });
+    res.status(500).json({ error: "Error fetching users" });
   }
 });
 
-
-// Optional: Fetch user by email
-router.get("/api/users/:email", async (req, res) => {
-  try {
-    const user = await Login.findOne({ email: req.params.email }); // Fetch user by email
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const userObj = user.toObject(); 
-    delete userObj.password; // Remove password from response
-    res.status(200).json(userObj);
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ error: "Error fetching user" });
-  }
-});
 
 module.exports = router;
