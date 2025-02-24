@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const User = require("./user");
+const Login = require("./Login");
 
 
 // // **POST API: Create User**
@@ -12,11 +13,11 @@ const User = require("./user");
 // if (existingUser) {
 //   return res.status(400).json({ message: "User already exists" });
 // }
-     
+
 
 //       const newUser = new User({ name, email, password });
 //       await newUser.save();
-      
+
 //       res.status(201).json({ message: "User created successfully", result: newUser });
 //   } catch (error) {
 //       res.status(500).json({ message: "Server Error", error: error.message });
@@ -36,6 +37,8 @@ router.post("/createuser", async (req, res) => {
 
     const newUser = new User({ name, email, password });
     await newUser.save();
+    const login = new Login({ email, password: password });
+    await login.save();
 
     res.status(201).json({ message: "User created successfully", result: newUser });
   } catch (error) {
@@ -47,11 +50,11 @@ router.post("/createuser", async (req, res) => {
 // **GET API: Retrieve Users**
 router.get("/api/user/getusers", async (req, res) => {
   try {
-      const users = await User.find();
-      res.status(200).json(users);
+    const users = await User.find();
+    res.status(200).json(users);
   } catch (error) {
-      res.status(500).json({ message: "Error fetching users", error: error.message });
+    res.status(500).json({ message: "Error fetching users", error: error.message });
   }
 });
-  
+
 module.exports = router;
